@@ -35,13 +35,12 @@ def do_task(task_id):
 		content = request.get_json(silent=True)
 		result = collection.update_one(
 			{"_id": task_id},
-			{"$set": {}}
+			{"$set": {"title": content["title"], "description": content["description"], "done": content["done"]}}
 		)
 		return jsonify({'status_code': 200})
 
 	if request.method == 'DELETE':
-		cursor.execute("DELETE FROM tasks where id=" + str(task_id));
-		conn.commit()
+		collection.delete_one({"_id": task_id})
 		return jsonify({'status_code': 200})
 
 	return jsonify({'status_code': '400'})
