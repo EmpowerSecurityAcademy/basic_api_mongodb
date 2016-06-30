@@ -3,25 +3,23 @@ import pymongo
 from pymongo import MongoClient
 
 config = load_config()
-client = MongoClient('mongodb://localhost:27017/')
+client = MongoClient(config["connection_url"])
 
-db = client['test-database']
-collection = db['test-collection']
+db = client['basic_api']
+collection = db['tasks']
 
 
 @app.route('/todo/api/v1.0/tasks', methods=['GET', 'POST', 'PUT'])
 def do_tasks():
 	if request.method == 'GET':
-		cursor.execute("SELECT * from tasks")
-		data = cursor.fetchone()
+		data = collection.find()
 		return jsonify({'tasks': data})
 
 
 	if request.method == 'POST':
 		content = request.get_json(silent=True)
-		cursor.execute("INSERT INTO tasks (title, description, done) VALUES('"+content['title'] +"', '"+ content['description'] +"', '"+ str(content['done']) + "')");
-		conn.commit()
-		return jsonify({'status_code': 201})
+		result = collection.insert_one(content)
+		return jsonify({'id': result.inserted_id})
 
 	return jsonify({'status_code': '400'})
 
@@ -30,15 +28,15 @@ def do_tasks():
 @app.route('/todo/api/v1.0/tasks/<task_id>', methods=['GET', 'PUT', 'DELETE'])
 def do_task(task_id):
 	if request.method == 'GET':
-		cursor.execute("SELECT * from tasks where id='" + task_id + "'")
-		data = cursor.fetchone()
+		data = collection.find({"_id": task_id})
 		return jsonify({'task': data})
 
 	if request.method == 'PUT':
 		content = request.get_json(silent=True)
-		print("UPDATE tasks SET title='"+content['title'] +"', description='"+ content['description'] +"', done= '"+ str(content['done']) + "' where id='" + str(task_id))
-		cursor.execute("UPDATE tasks SET title='"+content['title'] +"', description='"+ content['description'] +"', done= '"+ str(content['done']) + "' where id=" + str(task_id));
-		conn.commit()
+		result = collection.update_one(
+			{"_id": task_id},
+			{"$set": {}}
+		)
 		return jsonify({'status_code': 200})
 
 	if request.method == 'DELETE':
