@@ -11,8 +11,8 @@ app = Flask(__name__)
 config = load_config()
 client = MongoClient(config["database"]["connection_url"])
 
-db = client['basic_api']
-collection = db['tasks']
+db = client[config['database']['database_name']]
+collection = db[config['database']['collection_name']]
 
 url_root = '/todo/api/v2.0/'
 

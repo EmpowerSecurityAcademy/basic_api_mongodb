@@ -2,6 +2,8 @@
 	"database": {
 		"user_name": "admin",
 		"password": "password",
-		"connection_url": "res-api.sdfsdfsd.us-west-2.rds.amazonaws.com:3306"
+		"connection_url": "res-api.sdfsdfsd.us-west-2.rds.amazonaws.com:3306",
+		"database_name": "basic_api",
+		"collection_name": "tasks"
 	}
 }
