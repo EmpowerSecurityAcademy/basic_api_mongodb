@@ -1,49 +1,58 @@
 import json
 import pymongo
+from import_config import load_config
 from pymongo import MongoClient
+from flask import Flask, jsonify, request, make_response
+from bson.json_util import dumps
+from bson.objectid import ObjectId
+
+app = Flask(__name__)
 
 config = load_config()
-client = MongoClient(config["connection_url"])
+client = MongoClient(config["database"]["connection_url"])
 
 db = client['basic_api']
 collection = db['tasks']
 
+url_root = '/todo/api/v2.0/'
 
-@app.route('/todo/api/v1.0/tasks', methods=['GET', 'POST', 'PUT'])
+
+@app.route(url_root+'tasks', methods=['GET', 'POST', 'PUT'])
 def do_tasks():
 	if request.method == 'GET':
 		data = collection.find()
-		return jsonify({'tasks': data})
-
+		return make_response(dumps(data), 200)
 
 	if request.method == 'POST':
 		content = request.get_json(silent=True)
 		result = collection.insert_one(content)
-		return jsonify({'id': result.inserted_id})
+		return jsonify({'id': str(result.inserted_id)})
 
-	return jsonify({'status_code': '400'})
+	return make_response(jsonify({'status_code': 404}), 404)
 
 # RESTFUL operations related to a specific task
 
-@app.route('/todo/api/v1.0/tasks/<task_id>', methods=['GET', 'PUT', 'DELETE'])
+@app.route(url_root+'tasks/<task_id>', methods=['GET', 'PUT', 'DELETE'])
 def do_task(task_id):
 	if request.method == 'GET':
-		data = collection.find({"_id": task_id})
-		return jsonify({'task': data})
+		data = collection.find({"_id": ObjectId(task_id)})
+		return make_response(dumps(data), 200)
 
 	if request.method == 'PUT':
 		content = request.get_json(silent=True)
 		result = collection.update_one(
 			{"_id": task_id},
-			{"$set": {"title": content["title"], "description": content["description"], "done": content["done"]}}
+			{"$set": {"title": content["title"], 
+						"description": content["description"], 
+						"done": content["done"]}}
 		)
-		return jsonify({'status_code': 200})
+		return make_response(jsonify({'status_code': 200}), 200)
 
 	if request.method == 'DELETE':
-		collection.delete_one({"_id": task_id})
-		return jsonify({'status_code': 200})
+		result = collection.delete_one({"_id": task_id})
+		return make_response(jsonify({'status_code': 200}), 200)
 
-	return jsonify({'status_code': '400'})
+	return make_response(jsonify({'status_code': 404}), 404)
 
 
 if __name__ == '__main__':
