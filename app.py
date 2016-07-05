@@ -24,7 +24,6 @@ def format_json(element):
 	new_task["description"] = modified["description"]
 	new_task["title"] = modified["title"]
 	new_task["done"] = modified["done"]
-	print(new_task)
 	return new_task
 
 @basic_api.route(url_root+'tasks', methods=['GET', 'POST', 'PUT'])
@@ -33,10 +32,8 @@ def do_tasks():
 		data = basic_api.conn.find()
 		response = []
 		for element in data:
-			print(element)
-			formatted_element = format_json(element)
-			response.append(formatted_element)
-		return make_response(dumps(response), 200)
+			response.append(format_json(element))
+		return make_response(dumps({'tasks':response}), 200)
 
 	if request.method == 'POST':
 		content = request.get_json(silent=True)
@@ -51,22 +48,22 @@ def do_tasks():
 def do_task(task_id):
 	if request.method == 'GET':
 		data = basic_api.conn.find_one({"_id": ObjectId(task_id)})
-		return make_response(dumps(data), 200)
+		return make_response(dumps({'task':format_json(data)}), 200)
 
 	if request.method == 'PUT':
 		content = request.get_json(silent=True)
 		result = basic_api.conn.update_one(
-			{"_id": task_id},
+			{"_id": ObjectId(task_id)},
 			{"$set": {"title": content["title"], 
 						"description": content["description"], 
 						"done": content["done"]}}
 		)
 		data = basic_api.conn.find_one({"_id": ObjectId(task_id)})
-		return make_response(dumps(data), 200)
+		return make_response(dumps({'task':format_json(data)}), 200)
 
 	if request.method == 'DELETE':
 		result = basic_api.conn.delete_one({"_id": task_id})
-		return make_response(jsonify({'status_code': 200}), 200)
+		return make_response(dumps({'deleted_id': task_id}), 200)
 
 	return make_response(jsonify({'status_code': 500}), 500)
 
