@@ -24,6 +24,7 @@ def format_json(element):
 	new_task["description"] = modified["description"]
 	new_task["title"] = modified["title"]
 	new_task["done"] = modified["done"]
+	new_task["location"] = modified["location"]
 	return new_task
 
 @basic_api.route(url_root+'tasks', methods=['GET', 'POST', 'PUT'])
